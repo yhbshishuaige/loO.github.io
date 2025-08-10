@@ -1,0 +1,203 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>LLVM PASS PWN | pwn生之loo</title><meta name="author" content="John Doe"><meta name="copyright" content="John Doe"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="知LLVM(Low Level Virtual Machine)的设计理念  统一（LLVM IR）  编译器通常分成三部分：  前端：对源码进行不完全处理 -&gt;  中端：对前端产物优化 后端：得到机器码  llvm passllvm pass -&gt; llvm IR 处理  pass的基本类型：   分析型pass 转换型pass 实用型pass *   pass的处理单位：   处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLVM PASS PWN">
+<meta property="og:url" content="http://example.com/2025/08/04/LLVM%20PASS%20PWN/index.html">
+<meta property="og:site_name" content="pwn生之loo">
+<meta property="og:description" content="知LLVM(Low Level Virtual Machine)的设计理念  统一（LLVM IR）  编译器通常分成三部分：  前端：对源码进行不完全处理 -&gt;  中端：对前端产物优化 后端：得到机器码  llvm passllvm pass -&gt; llvm IR 处理  pass的基本类型：   分析型pass 转换型pass 实用型pass *   pass的处理单位：   处理">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/pic/logo_p.png">
+<meta property="article:published_time" content="2025-08-04T14:42:22.143Z">
+<meta property="article:modified_time" content="2025-08-04T14:42:22.145Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="pwn">
+<meta property="article:tag" content="LLVM_PASS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/pic/logo_p.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "LLVM PASS PWN",
+  "url": "http://example.com/2025/08/04/LLVM%20PASS%20PWN/",
+  "image": "http://example.com/pic/logo_p.png",
+  "datePublished": "2025-08-04T14:42:22.143Z",
+  "dateModified": "2025-08-04T14:42:22.145Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "John Doe",
+      "url": "http://example.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/pic/logo_p.png"><link rel="canonical" href="http://example.com/2025/08/04/LLVM%20PASS%20PWN/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'LLVM PASS PWN',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css" media="defer" onload="this.media='all'"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/pic/111.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/pic/logo_p.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">9</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> atricle</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> friendship</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/pic/logo_p.png" alt="Logo"><span class="site-name">pwn生之loo</span></a><a class="nav-page-title" href="/"><span class="site-name">LLVM PASS PWN</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> atricle</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> friendship</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">LLVM PASS PWN</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-08-04T14:42:22.143Z" title="Created 2025-08-04 22:42:22">2025-08-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2025-08-04T14:42:22.145Z" title="Updated 2025-08-04 22:42:22">2025-08-04</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout hide-aside" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="知"><a href="#知" class="headerlink" title="知"></a>知</h1><p>LLVM(Low Level Virtual Machine)的设计理念</p>
+<ul>
+<li>统一（LLVM IR）</li>
+</ul>
+<p>编译器通常分成三部分：</p>
+<ol>
+<li>前端：对源码进行不完全处理 -&gt; </li>
+<li>中端：对前端产物优化</li>
+<li>后端：得到机器码</li>
+</ol>
+<p>llvm pass<br>llvm pass -&gt; llvm IR 处理</p>
+<ul>
+<li>pass的基本类型：</li>
+</ul>
+<ol>
+<li>分析型pass</li>
+<li><em><strong>转换型pass</strong></em></li>
+<li>实用型pass <code>*</code></li>
+</ol>
+<ul>
+<li>pass的处理单位：</li>
+</ul>
+<ol>
+<li>处理函数：<em><strong>FounctionPass</strong></em> </li>
+<li>处理模块：ModulePass</li>
+<li>处理单个基本块：BasicBlockPass</li>
+<li>处理循环：LoopPass</li>
+</ol>
+<h2 id="clang和llvm"><a href="#clang和llvm" class="headerlink" title="clang和llvm"></a>clang和llvm</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Ubuntu-18.04</span></span><br><span class="line">sudo apt install clang-8</span><br><span class="line">sudo apt install llvm-8</span><br><span class="line"></span><br><span class="line">sudo apt install clang-10</span><br><span class="line">sudo apt install llvm-10</span><br></pre></td></tr></table></figure>
+
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">pass</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编译</span></span><br><span class="line">clang-10 -g -c -fPIC -fno-rtti ./Hello.cpp -o Hello.o $(llvm-config-10 --cxxflags)</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">链接</span></span><br><span class="line">clang-10 -shared -Wl,-znodelete Hello.o $(llvm-config-10 --ldflags --libs --system-libs) -o LLVMHello.so</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编译链接</span></span><br><span class="line">clang-10 -g -fPIC -fno-rtti -shared -Wl,-znodelete ./Hello.cpp -o LLVMHello.so $(llvm-config-10 --cxxflags --ldflags --libs --system-libs)</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">不同文件之间的转换</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">.c -&gt; .ll：</span></span><br><span class="line">clang-8 -emit-llvm -S pwwn.c -o pwwn.ll</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">.c -&gt; .bc:</span> </span><br><span class="line">clang-8 -emit-llvm -c pwwn.c -o pwwn.bc</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">.ll -&gt; .bc:</span> </span><br><span class="line">llvm-as a.ll -o a.bc</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">.bc -&gt; .ll:</span> </span><br><span class="line">llvm-dis a.bc -o a.ll</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">.bc -&gt; .s:</span> </span><br><span class="line">llc a.bc -o a.s</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Hello.cpp  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/Pass.h&quot;</span>  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/IR/Function.h&quot;</span>  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/IR/Constants.h&quot;</span>  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/IR/BasicBlock.h&quot;</span>  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/IR/Instructions.h&quot;</span>  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/Support/raw_ostream.h&quot;</span>  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/IR/LegacyPassManager.h&quot;</span>  </span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/Transforms/IPO/PassManagerBuilder.h&quot;</span>  </span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> llvm;  </span><br><span class="line">   </span><br><span class="line"><span class="keyword">namespace</span> &#123;  </span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">Hello</span> : <span class="keyword">public</span> FunctionPass &#123;  </span><br><span class="line">    <span class="type">static</span> <span class="type">char</span> ID;  </span><br><span class="line">    <span class="built_in">Hello</span>() : <span class="built_in">FunctionPass</span>(ID) &#123;&#125;  </span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">runOnFunction</span><span class="params">(Function &amp;F)</span> <span class="keyword">override</span> </span></span><br><span class="line"><span class="function">    </span>&#123;  </span><br><span class="line">      <span class="built_in">errs</span>() &lt;&lt; <span class="string">&quot;Hello: &quot;</span>;  </span><br><span class="line">      <span class="built_in">errs</span>().<span class="built_in">write_escaped</span>(F.<span class="built_in">getName</span>()) &lt;&lt; <span class="string">&#x27;\n&#x27;</span>;  </span><br><span class="line">      SymbolTableList&lt;BasicBlock&gt;::const_iterator bbEnd = F.<span class="built_in">end</span>();</span><br><span class="line">      <span class="keyword">for</span>(SymbolTableList&lt;BasicBlock&gt;::const_iterator bbIter = F.<span class="built_in">begin</span>(); </span><br><span class="line">									bbIter != bbEnd; ++bbIter)</span><br><span class="line">	  &#123; </span><br><span class="line">         SymbolTableList&lt;Instruction&gt;::const_iterator instIter = bbIter-&gt;<span class="built_in">begin</span>();  </span><br><span class="line">         SymbolTableList&lt;Instruction&gt;::const_iterator instEnd  = bbIter-&gt;<span class="built_in">end</span>();  </span><br><span class="line">         <span class="keyword">for</span>(; instIter != instEnd; ++instIter)</span><br><span class="line">         &#123;  </span><br><span class="line">            <span class="built_in">errs</span>() &lt;&lt; <span class="string">&quot;OpcodeName = &quot;</span> &lt;&lt; instIter-&gt;<span class="built_in">getOpcodeName</span>() </span><br><span class="line">	            &lt;&lt; <span class="string">&quot; NumOperands = &quot;</span> &lt;&lt; instIter-&gt;<span class="built_in">getNumOperands</span>() &lt;&lt; <span class="string">&quot;\n&quot;</span>;  </span><br><span class="line">            <span class="keyword">if</span> (instIter-&gt;<span class="built_in">getOpcode</span>() == <span class="number">56</span>)  </span><br><span class="line">            &#123;  </span><br><span class="line">                <span class="keyword">if</span>(<span class="type">const</span> CallInst* call_inst = <span class="built_in">dyn_cast</span>&lt;CallInst&gt;(instIter)) </span><br><span class="line">                &#123;  </span><br><span class="line">                    <span class="built_in">errs</span>() &lt;&lt; call_inst-&gt;<span class="built_in">getCalledFunction</span>()-&gt;<span class="built_in">getName</span>() &lt;&lt; <span class="string">&quot;\n&quot;</span>;  </span><br><span class="line">                    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; instIter-&gt;<span class="built_in">getNumOperands</span>()<span class="number">-1</span>; i++)  </span><br><span class="line">                    &#123;  </span><br><span class="line">                        <span class="keyword">if</span> (<span class="built_in">isa</span>&lt;ConstantInt&gt;(call_inst-&gt;<span class="built_in">getOperand</span>(i)))  </span><br><span class="line">                        &#123;  </span><br><span class="line">                            <span class="built_in">errs</span>() &lt;&lt; <span class="string">&quot;Operand &quot;</span> &lt;&lt; i &lt;&lt; <span class="string">&quot; = &quot;</span> </span><br><span class="line">                            &lt;&lt; <span class="built_in">dyn_cast</span>&lt;ConstantInt&gt;</span><br><span class="line">                            (call_inst-&gt;<span class="built_in">getArgOperand</span>(i))-&gt;<span class="built_in">getZExtValue</span>() &lt;&lt; <span class="string">&quot;\n&quot;</span>;  </span><br><span class="line">                        &#125;  </span><br><span class="line">                    &#125;  </span><br><span class="line">                &#125;  </span><br><span class="line">            &#125;  </span><br><span class="line">         &#125;  </span><br><span class="line">      &#125;  </span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;  </span><br><span class="line">    &#125; </span><br><span class="line">  &#125;;  </span><br><span class="line">&#125;  </span><br><span class="line">   </span><br><span class="line"><span class="type">char</span> Hello::ID = <span class="number">0</span>;  </span><br><span class="line">   </span><br><span class="line"><span class="comment">// Register for opt  </span></span><br><span class="line"><span class="function"><span class="type">static</span> RegisterPass&lt;Hello&gt; <span class="title">X</span><span class="params">(<span class="string">&quot;Hello&quot;</span>, <span class="string">&quot;Hello World Pass&quot;</span>)</span></span>;  </span><br><span class="line">   </span><br><span class="line"><span class="comment">// Register for clang  </span></span><br><span class="line"><span class="function"><span class="type">static</span> RegisterStandardPasses <span class="title">Y</span><span class="params">(PassManagerBuilder::EP_EarlyAsPossible,  </span></span></span><br><span class="line"><span class="params"><span class="function">  [](<span class="type">const</span> PassManagerBuilder &amp;Builder, legacy::PassManagerBase &amp;PM) &#123;  </span></span></span><br><span class="line"><span class="params"><span class="function">    PM.add(<span class="keyword">new</span> Hello());  </span></span></span><br><span class="line"><span class="params"><span class="function">  &#125;)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// LLVMHello.cpp</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/IR/Function.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/Pass.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;llvm/Support/raw_ostream.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> llvm;</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> &#123;</span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">LLVMHello</span> : <span class="keyword">public</span> FunctionPass &#123;</span><br><span class="line">    <span class="type">static</span> <span class="type">char</span> ID;</span><br><span class="line">    <span class="built_in">LLVMHello</span>() : <span class="built_in">FunctionPass</span>(ID) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">runOnFunction</span><span class="params">(Function &amp;F)</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line">      <span class="built_in">errs</span>() &lt;&lt; <span class="string">&quot;Hello: &quot;</span> &lt;&lt; F.<span class="built_in">getName</span>() &lt;&lt; <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>; <span class="comment">// 如果没有修改函数，返回false</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">char</span> LLVMHello::ID = <span class="number">0</span>;</span><br><span class="line"><span class="function"><span class="type">static</span> RegisterPass&lt;LLVMHello&gt; <span class="title">X</span><span class="params">(<span class="string">&quot;llvm-hello&quot;</span>, <span class="string">&quot;LLVM Hello World Pass&quot;</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">opt-10 -load ./LLVMHello.so -&quot;hello&quot; ./test.ll -S -o test_new.ll</span><br></pre></td></tr></table></figure>
+<h2 id="gdb调试"><a href="#gdb调试" class="headerlink" title="gdb调试"></a>gdb调试</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">gdb ./opt-8</span><br><span class="line">set args -load ./VMPass.so -&quot;VMPass&quot; ./pwwn.ll</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">0x4b8d60</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">0x7ffff2396000</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h2><ul>
+<li>源码 → Clang 前端 → LLVM IR → opt 优化 → llc 后端 → 汇编代码 → 汇编器 → 可执行文件</li>
+</ul>
+<h2 id="逆向"><a href="#逆向" class="headerlink" title="逆向"></a>逆向</h2><p><code>.data.rel.ro</code>的最后一个函数就是<code>RunOnFunction</code><br><img src="/pic/1754196824976.png" alt="1754196824976"><br>![[Pasted image 20250803125108.png]]</p>
+<h1 id="练"><a href="#练" class="headerlink" title="练"></a>练</h1><h2 id="RedHat2021-simpleVM"><a href="#RedHat2021-simpleVM" class="headerlink" title="RedHat2021-simpleVM"></a>RedHat2021-simpleVM</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">find /usr/include -name &quot;Instruction.def&quot;</span><br><span class="line">cat ./llvm-8/llvm/IR/Instruction.def | grep 55</span><br></pre></td></tr></table></figure>
+<p><code>HANDLE_OTHER_INST(55, Call   , CallInst   )  // Call a function</code><br>….</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="http://example.com">John Doe</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="http://example.com/2025/08/04/LLVM%20PASS%20PWN/">http://example.com/2025/08/04/LLVM%20PASS%20PWN/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/pwn/">pwn</a><a class="post-meta__tags" href="/tags/LLVM-PASS/">LLVM_PASS</a></div><div class="post-share"><div class="social-share" data-image="/pic/logo_p.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/08/01/babykernel%20-%20uiuctf2025/" title="babykernel - uiuctf2025"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">babykernel - uiuctf2025</div></div><div class="info-2"><div class="info-item-1"> to be continued…  PART Iunpack123gunzip initrd.cpio.gzallinone.sh new#修改启动脚本 run.sh12345678910111213141516#! /bin/sh# Note: -serial mon:stdio is here for convenience purposes.# Remotely the chal is run with -serial stdio.qemu-system-x86_64 \  -no-reboot \  -cpu max \  -net none \  -serial mon:stdio \  -display none \  -monitor none \  -vga none \  -kernel bzImage \  -initrd initrd.cpio.gz \  -append &quot;console=ttyS0&quot; \ runable 1234567891011121314151617#! /bin/sh# Note: -serial...</div></div></div></a><a class="pagination-related  no-desc" href="/2025/08/10/2021QWB--notebook/" title="2021QWB--notebook"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">2021QWB--notebook</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/06/20/MINI-LCTF2022%20-%20kgadget/" title="MINI-LCTF2022 - kgadget"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-20</div><div class="info-item-2">MINI-LCTF2022 - kgadget</div></div><div class="info-2"><div class="info-item-1">PART Iunpack1234567loo@localhost:~/ctf/kernel/xiaozaiya/kernel-PWN/kgadget/try$ tar -xvf ./kgadget.tar.xzbzImageREADME.mdrootfs.cpiorun.shloo@localhost:~/ctf/kernel/xiaozaiya/kernel-PWN/kgadget/try$ lsREADME.md  bzImage  kgadget.tar.xz  rootfs.cpio  run.sh 12loo@localhost:~/ctf/kernel/xiaozaiya/kernel-PWN/kgadget$ file rootfs.cpiorootfs.cpio: ASCII cpio archive (SVR4 with no CRC)  md core &amp;&amp; cd ./core &amp;&amp; cpio -idv &lt;...</div></div></div></a><a class="pagination-related" href="/2025/06/20/CISCN2017-babydriver/" title="CISCN2017-babydriver"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-20</div><div class="info-item-2">CISCN2017-babydriver</div></div><div class="info-2"><div class="info-item-1">PART Iunpack12loo@localhost:~/ctf/kernel/xiaozaiya/kernel-PWN/CISCN2017-babydriver/try$ file ./rootfs.cpio./rootfs.cpio: ASCII cpio archive (SVR4 with no CRC) md core &amp;&amp; cd ./core &amp;&amp; cpio -idv &lt; ../rootfs.cpio start.sh12345678910111213#!/bin/bashqemu-system-x86_64 \-initrd rootfs.cpio \-kernel bzImage \-cpu kvm64,+smep \-append &#x27;console=ttyS0 root=/dev/ram kpti=1 nokaslr oops=panic panic=1&#x27; \-monitor /dev/null \-enable-kvm \-m 256M \--nographic  \-smp...</div></div></div></a><a class="pagination-related" href="/2025/06/20/~kernel/" title="~&#x2F;kernel"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-20</div><div class="info-item-2">~&#x2F;kernel</div></div><div class="info-2"><div class="info-item-1"> “少上网多读书” – arttnba3 结构体，函数以及变量结构体多起来之后有点乱，整理在这里 struct cred 4.4.72 12345678910111213141516171819202122232425262728293031323334353637383940struct cred &#123;        atomic_t                   usage;                /*     0     4 */        kuid_t                     uid;                  /*     4     4 */        //不知道什么用，参考作用        kgid_t                     gid;                  /*     8     4 */        kuid_t                     suid;                 /*    12     4 */       ...</div></div></div></a><a class="pagination-related" href="/2025/06/18/QWB2018%20-%20core/" title="QWB2018 - core"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-18</div><div class="info-item-2">QWB2018 - core</div></div><div class="info-2"><div class="info-item-1">PART Iunpack12loo@localhost:~/ctf/kernel/xiaozaiya/kernel-PWN/QWB2018-core/tar/try$ lsbzImage  core.cpio.gz  core.tar.gz  exp.c  exp.sh  start.sh  vmlinux  12loo@localhost:~/ctf/kernel/xiaozaiya/kernel-PWN/QWB2018-core/tar/try$ file core.cpio.gzcore.cpio.gz: gzip compressed data, was &quot;core.cpio&quot;, last modified: Sat Sep 23 02:42:27 2023, from Unix, original size modulo 2^32 120943104  gzip -&gt; gunzip ./core.cpio.gz -&gt; ./core.cpio md core &amp;&amp; cd core &amp;&amp; cpio -idv...</div></div></div></a><a class="pagination-related" href="/2025/07/26/ISCC2025-EBPF/" title="ISCC2025-EBPF"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-07-26</div><div class="info-item-2">ISCC2025-EBPF</div></div><div class="info-2"><div class="info-item-1"> to be continued…  PART Iunpack allinone.sh  run.sh12345678910111213#!/bin/shqemu-system-x86_64 \        -m 512M \        -cpu qemu64,+smep,+smap -smp 2 \        -kernel bzImage \        -append &quot;console=ttyS0 quiet panic=-1 nokaslr&quot; \        -initrd rootfs.cpio \        -drive file=./flag,if=virtio,format=raw,readonly=on \        -nographic \        -net nic,model=e1000 \        -no-reboot \        -monitor /dev/null  runable 123456789101112131415#!/bin/shqemu-system-x86_64 \     ...</div></div></div></a><a class="pagination-related no-desc" href="/2025/08/10/2021QWB--notebook/" title="2021QWB--notebook"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-08-10</div><div class="info-item-2">2021QWB--notebook</div></div></div></a></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
